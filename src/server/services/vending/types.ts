@@ -1,4 +1,3 @@
-import { EventObject } from "xstate/lib/types";
 import { IProduct } from "../../models/Product";
 
 // The events that the machine handles

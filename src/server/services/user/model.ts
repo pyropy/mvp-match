@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createModel } from "xstate/lib/model";
 
 // models

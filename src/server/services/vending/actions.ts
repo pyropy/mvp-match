@@ -1,17 +1,21 @@
-// @ts-nocheck
 import { actions, spawn } from "xstate";
 import userMachine from "../user";
 import { vendingModel } from "./model";
+import { VendingContext, VendingEvent } from "./types";
 
 const { choose, log } = actions;
 
 // actions
 const selectItem = vendingModel.assign({
-  selected: (_, event) => event.item,
+  selected: (_context: VendingContext, event: VendingEvent) =>
+    event.type === "selectItem" ? event.item : undefined,
 });
 
 const deposit = vendingModel.assign({
-  deposited: (context, event) => context.deposited + event.value,
+  deposited: (context, event) =>
+    event.type === "deposit"
+      ? context.deposited + event.value
+      : context.deposited,
 });
 
 const payout = vendingModel.assign({
@@ -21,7 +25,10 @@ const payout = vendingModel.assign({
 // select items conditional actions
 export const selectItemActions = choose([
   {
-    cond: (_, event) => event.item.amountAvailable > 0,
+    // @ts-ignore
+    cond: (_context, event: VendingEvent) =>
+      event.type === "selectItem" && event.item.amountAvailable > 0,
+    // @ts-ignore
     actions: [selectItem, log("Selecting item")],
   },
   {
@@ -33,12 +40,14 @@ export const selectItemActions = choose([
 const acceptedValues = [5, 10, 20, 50, 100];
 export const depositActions = choose([
   {
-    cond: (context, event) =>
-      acceptedValues.includes(event.value),
-      // context.userActor.state.context.user &&
-      // context.userActor.state.context.user.balance >=
-      //   event.value + context.deposited,
+    // @ts-ignore
+    cond: (_context, event: VendingEvent) =>
+      event.type === "deposit" && acceptedValues.includes(event.value),
+    // context.userActor.state.context.user &&
+    // context.userActor.state.context.user.balance >=
+    //   event.value + context.deposited,
 
+    // @ts-ignore
     actions: [deposit, log("Depositing")],
   },
   {
@@ -48,7 +57,10 @@ export const depositActions = choose([
 
 export const payoutActions = choose([
   {
-    cond: (context, _) => acceptedValues.includes(context.deposit),
+    // @ts-ignore
+    cond: (context: VendingContext, event: VendingEvent) =>
+      event.type === "payout" && acceptedValues.includes(context.deposited),
+    // @ts-ignore
     actions: [payout, log("Paying out deposit.")],
   },
   {
@@ -57,17 +69,18 @@ export const payoutActions = choose([
 ]);
 
 export const restartSelectedItem = vendingModel.assign({
-  selected: (context, event) => undefined,
+  selected: (_context, _event: any) => undefined,
 });
 
 // after vending is finished set deposited to change and selected to undefined
 export const afterVending = vendingModel.assign({
-  deposited: (context, event) => context.deposited - context.selected.cost,
-  selected: (context, event) => undefined,
+  deposited: (context: VendingContext, _event: any) =>
+    context.deposited - context.selected.cost,
+  selected: (_context: VendingContext, _event: any) => undefined,
 });
 
 export const spawnUserActor = vendingModel.assign({
-  userActor: (context, _) =>
+  userActor: (context: VendingContext, _event: any) =>
     spawn(
       userMachine.withContext({ userId: context.userId, user: undefined }),
       { sync: true }

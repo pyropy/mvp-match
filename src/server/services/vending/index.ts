@@ -36,7 +36,7 @@ const vendingMachine = createMachine<VendingContext, VendingEvent>(
           },
           // @ts-ignore
           deposit: {
-            actions: ['fetchUser', depositActions],
+            actions: ["fetchUser", depositActions],
           },
           // @ts-ignore
           payout: {
@@ -66,7 +66,11 @@ const vendingMachine = createMachine<VendingContext, VendingEvent>(
   },
   {
     actions: {
-      fetchUser: (event, context) => send({ type: "fetch"}, { to: (context: VendingContext) => context.userActor})
+      fetchUser: (event, context) =>
+        send(
+          { type: "fetch" },
+          { to: (context: VendingContext) => context.userActor }
+        ),
     },
     guards: {
       vendingIsValid,
