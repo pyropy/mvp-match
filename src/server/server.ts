@@ -4,7 +4,6 @@ import express from "express";
 import connectDB from "./services/database";
 import auth from "./routes/api/auth";
 import user from "./routes/api/user";
-import profile from "./routes/api/profile";
 
 const app = express();
 
@@ -16,10 +15,9 @@ app.set("port", process.env.PORT || 3000);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.use(express.static('public'));
+app.use(express.static("public"));
 app.use("/api/auth", auth);
 app.use("/api/user", user);
-app.use("/api/profile", profile);
 
 const port = app.get("port");
 const server = app.listen(port, () =>
