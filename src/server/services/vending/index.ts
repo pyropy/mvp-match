@@ -1,42 +1,44 @@
-import { createMachine, actions } from "xstate";
+import { createMachine, actions, send } from "xstate";
+import { vendingModel } from "./model";
 import {
   afterVending,
   depositActions,
   payoutActions,
   restartSelectedItem,
   selectItemActions,
+  spawnUserActor,
 } from "./actions";
 import { vendingIsValid } from "./guards";
-import { vendingModel } from "./model";
-import { VendingContext, VendingEvent, VendingTypestate } from "./types";
+import { VendingContext, VendingEvent } from "./types";
 const { log } = actions;
 
-const vend = (context, event): Promise<boolean> =>
-  new Promise((resolve, reject) => {
-    return resolve(true);
-  });
+const vendSelectedProduct = async (context, _event) => {
+  const { deposit, selected } = context;
 
-// state machine
-const vendingMachine = createMachine<
-  VendingContext,
-  VendingEvent,
-  VendingTypestate
->(
+  return true;
+};
+
+const vendingMachine = createMachine<VendingContext, VendingEvent>(
   {
     id: "vending",
     initial: "idle",
     context: vendingModel.initialContext,
     states: {
       idle: {
+        // @ts-ignore
+        entry: spawnUserActor,
         on: {
+          // @ts-ignore
           selectItem: {
             target: "vending",
             actions: selectItemActions,
             cond: vendingIsValid,
           },
+          // @ts-ignore
           deposit: {
-            actions: depositActions,
+            actions: ['fetchUser', depositActions],
           },
+          // @ts-ignore
           payout: {
             actions: payoutActions,
           },
@@ -46,7 +48,7 @@ const vendingMachine = createMachine<
         // @ts-ignore
         invoke: {
           id: "vending",
-          src: vend,
+          src: vendSelectedProduct,
           onError: {
             target: "idle",
             actions: [
@@ -63,6 +65,9 @@ const vendingMachine = createMachine<
     },
   },
   {
+    actions: {
+      fetchUser: (event, context) => send({ type: "fetch"}, { to: (context: VendingContext) => context.userActor})
+    },
     guards: {
       vendingIsValid,
     },

@@ -7,6 +7,8 @@ export const vendingModel = createModel(
   {
     deposited: 0,
     selected: undefined,
+    userId: undefined,
+    userActor: undefined,
   },
   {
     events: {

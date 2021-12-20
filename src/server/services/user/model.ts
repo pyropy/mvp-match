@@ -4,6 +4,13 @@ import { createModel } from "xstate/lib/model";
 // models
 export const userModel = createModel(
   {
-    balance: 0,
+    userId: undefined,
+    user: undefined,
   },
+  {
+    events: {
+      retry: () => ({}),
+      fetch: () => ({}),
+    },
+  }
 );

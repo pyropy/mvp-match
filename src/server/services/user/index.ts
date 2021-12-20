@@ -1,17 +1,49 @@
 import { createMachine, actions } from "xstate";
 import { userModel } from "./model";
+import User from "../../models/User";
+import { assign } from "xstate/lib/actionTypes";
 const { log } = actions;
+
+const getUser = async (userId) =>  ({balance: 100}) // User.findById(userId);
 
 // state machine
 const userMachine = createMachine({
-  id: "vending",
-  initial: "idle",
+  id: "user",
+  initial: "loading",
   context: userModel.initialContext,
   states: {
+    idle: {
+      on: {
+        fetch: { target: "loading" },
+      },
+    },
+    success: {},
+    failure: {
+      on: {
+        retry: { target: "loading" },
+      },
+    },
     loading: {
       invoke: {
-        id: 'load-user',
-        src: () => Promise.resolve(true),
+        id: "getUser",
+        src: (context, event) => getUser(context.userId),
+      },
+      // @ts-ignore
+      onDone: {
+        target: "success",
+        actions: userModel.assign({
+          user: (_, event) => {
+            console.log(event.data)
+            return event.data
+          },
+        }),
+      },
+      // @ts-ignore
+      onError: {
+        target: "failure",
+        actions: userModel.assign({
+          user: (_, event) => event.data,
+        }),
       },
     },
   },

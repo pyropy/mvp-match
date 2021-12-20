@@ -1,9 +1,11 @@
 import { Router, Response } from "express";
 import HttpStatusCodes from "http-status-codes";
-import { interpret } from "xstate";
+import { interpret, State } from "xstate";
 
 import auth from "../../middleware/auth";
+import cacheService from "../../services/cache";
 import vendingMachine from "../../services/vending";
+import { VendingContext, VendingEvent } from "../../services/vending/types";
 import Request from "../../types/Request";
 
 const router: Router = Router();
@@ -11,15 +13,25 @@ const router: Router = Router();
 // @route   GET api/vending/deposit
 // @desc    Add deposit to vending machine
 // @access  Private
-router.get("/deposit", auth, async (req: Request, res: Response) => {
+router.get("/deposit", async (req: Request, res: Response) => {
   try {
-    const vendingMachineService = interpret(vendingMachine).onTransition((s) =>
-      console.log(s.value)
-    );
+    const userId = "1";
+    const stateDefinition =
+      cacheService.get(userId) || vendingMachine.initialState;
 
-    vendingMachineService.onChange((ctx) => console.log(ctx))
+    const previousState: State<VendingContext, VendingEvent> =
+      State.create(stateDefinition);
 
-    res.json({ test: 1 });
+    const vendingMachineService =
+      interpret(vendingMachine).start(previousState);
+
+
+    vendingMachineService.send("deposit", { value: 5 })
+
+    const state = vendingMachineService.state;
+
+    cacheService.put(userId, state);
+    res.json({ state });
   } catch (err) {
     console.error(err.message);
     res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");

@@ -1,5 +1,6 @@
 // @ts-nocheck
-import { actions } from "xstate";
+import { actions, spawn } from "xstate";
+import userMachine from "../user";
 import { vendingModel } from "./model";
 
 const { choose, log } = actions;
@@ -32,7 +33,12 @@ export const selectItemActions = choose([
 const acceptedValues = [5, 10, 20, 50, 100];
 export const depositActions = choose([
   {
-    cond: (_, event) => acceptedValues.includes(event.value),
+    cond: (context, event) =>
+      acceptedValues.includes(event.value),
+      // context.userActor.state.context.user &&
+      // context.userActor.state.context.user.balance >=
+      //   event.value + context.deposited,
+
     actions: [deposit, log("Depositing")],
   },
   {
@@ -58,4 +64,12 @@ export const restartSelectedItem = vendingModel.assign({
 export const afterVending = vendingModel.assign({
   deposited: (context, event) => context.deposited - context.selected.cost,
   selected: (context, event) => undefined,
+});
+
+export const spawnUserActor = vendingModel.assign({
+  userActor: (context, _) =>
+    spawn(
+      userMachine.withContext({ userId: context.userId, user: undefined }),
+      { sync: true }
+    ),
 });

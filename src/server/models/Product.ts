@@ -9,9 +9,9 @@ import { Document, Model, model, Schema } from "mongoose";
  */
 export interface IProduct extends Document {
   productName: string;
-  cost: string;
-  amountAvailable: string;
-  sellerId: boolean;
+  cost: number;
+  amountAvailable: number;
+  sellerId: string;
 }
 
 const productSchema: Schema = new Schema({
