@@ -17,23 +17,27 @@ const userSchema: Schema = new Schema({
   email: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
   },
   password: {
     type: String,
-    required: true
+    required: true,
   },
   avatar: {
-    type: String
+    type: String,
   },
   date: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   vendor: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
+  balance: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const User: Model<IUser> = model("User", userSchema);
