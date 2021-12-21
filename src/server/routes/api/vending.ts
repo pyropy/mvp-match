@@ -20,7 +20,6 @@ const router: Router = Router();
 router.post(
   "/deposit",
   [
-    // check("productId", "Please provide product id.").isAlphanumeric(),
     check("amount", "Please provide positive integer amount.").isInt({ gt: 0 }),
   ],
   auth,
@@ -64,12 +63,6 @@ router.post(
 // @desc    Add deposit to vending machine
 // @access  Private
 router.post("/reset", auth, async (req: Request, res: Response) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res
-      .status(HttpStatusCodes.BAD_REQUEST)
-      .json({ errors: errors.array() });
-  }
 
   try {
     const user: IUser = await User.findById(req.userId);
@@ -157,5 +150,33 @@ router.post(
     }
   }
 );
+
+
+
+// @route   GET api/vending/state
+// @desc    Add deposit to vending machine
+// @access  Private
+router.get("/state", auth, async (req: Request, res: Response) => {
+  try {
+    const user: IUser = await User.findById(req.userId);
+
+    if (user.vendor) {
+      return res.status(HttpStatusCodes.BAD_REQUEST).json({
+        errors: [
+          {
+            msg: "Vendors are not allowed to use vending machine.",
+          },
+        ],
+      });
+    }
+
+    const vendingMachineService = getCachedVendingMachine(user);
+
+    res.json(vendingMachineService.state);
+  } catch (err) {
+    console.error(err.message);
+    res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
+  }
+});
 
 export default router;

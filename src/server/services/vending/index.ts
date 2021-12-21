@@ -1,4 +1,4 @@
-import { createMachine, actions, send, assign, spawn, interpret } from "xstate";
+import { createMachine, actions, assign } from "xstate";
 import { vendingModel } from "./model";
 import {
   onVendingFinish,
