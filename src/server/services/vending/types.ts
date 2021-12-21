@@ -22,7 +22,7 @@ export interface VendingContext {
 
 export type VendingTypestate =
   | {
-      value: "fetchBalance";
+      value: "updateBalance";
       context: VendingContext;
     }
   | {

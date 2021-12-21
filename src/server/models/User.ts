@@ -5,8 +5,11 @@ import { Document, Model, model, Schema } from "mongoose";
  * @param email:string
  * @param password:string
  * @param avatar:string
+ * @param vendor:boolean
+ * @param balance:number
  */
 export interface IUser extends Document {
+  id?: string;
   email: string;
   password: string;
   avatar: string;

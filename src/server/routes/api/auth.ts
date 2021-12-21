@@ -44,7 +44,7 @@ router.post(
     }
 
     const { email, password } = req.body;
-    try {
+    // try {
       let user: IUser = await User.findOne({ email });
 
       if (!user) {
@@ -72,7 +72,6 @@ router.post(
       const payload: Payload = {
         userId: user.id,
       };
-
       createAndCacheNewVendingMachine(user)
 
       jwt.sign(
@@ -84,10 +83,11 @@ router.post(
           res.json({ token });
         }
       );
-    } catch (err) {
-      console.error(err.message);
-      res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
-    }
+
+    // } catch (err) {
+    //   console.error(err.message);
+    //   res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
+    // }
   }
 );
 

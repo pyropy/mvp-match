@@ -1,9 +1,10 @@
 import { VendingContext, VendingEvent } from "./types";
 
-// guards
-export const vendingIsValid = (context: VendingContext, event: VendingEvent): boolean =>
+export const vendingIsValid = (ctx: VendingContext, event: VendingEvent): boolean =>
   event.type === 'selectItem' &&
-  context.deposited > 0 &&
+  ctx.deposited > 0 &&
   event.item &&
   event.item.amountAvailable &&
-  event.item.cost <= context.deposited;
+  event.quantity > 0 &&
+  event.quantity <= event.item.amountAvailable &&
+  event.item.cost * event.quantity <= ctx.deposited;

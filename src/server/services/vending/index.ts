@@ -4,21 +4,30 @@ import {
   onVendingFinish,
   depositActions,
   payoutActions,
-  restartSelectedItems,
+  restartSelectedItem,
   selectItemActions,
 } from "./actions";
 import { vendingIsValid } from "./guards";
 import { VendingContext, VendingEvent } from "./types";
-import User from "../../models/User";
+import User, { IUser } from "../../models/User";
+import Product, { IProduct } from "../../models/Product";
 const { log } = actions;
 
-const vendSelectedProduct = async (context, _event) => {
-  const { deposit, selected } = context;
+const vendSelectedProduct = async (context: VendingContext, _event) => {
+  const {
+    selected: { item, quantity },
+    userId,
+  } = context;
 
-  return true;
+  const user: IUser = await User.findById(userId);
+  const product: IProduct = await Product.findById(item.id);
+
+  user.balance -= quantity * product.cost;
+  product.amountAvailable -= quantity;
+
+  await user.save();
+  await product.save();
 };
-
-// const fetchUser = (ctx, event) => Promise.resolve({ balance: 100})
 
 const vendingMachine = createMachine<VendingContext, VendingEvent>(
   {
@@ -62,16 +71,16 @@ const vendingMachine = createMachine<VendingContext, VendingEvent>(
         invoke: {
           id: "vending",
           src: vendSelectedProduct,
-          onError: {
-            target: "updateBalance",
-            actions: [
-              restartSelectedItems,
-              log("Error while tring to vend items"),
-            ],
-          },
           onDone: {
             target: "updateBalance",
             actions: [onVendingFinish, log("Vending finished")],
+          },
+          onError: {
+            target: "updateBalance",
+            actions: [
+              restartSelectedItem,
+              log("Error while tring to vend items"),
+            ],
           },
         },
       },
@@ -83,7 +92,7 @@ const vendingMachine = createMachine<VendingContext, VendingEvent>(
     },
     services: {
       fetchUser: async (ctx) => {
-        return User.findOne({ userId: ctx.userId });
+        return await User.findById(ctx.userId);
       },
     },
   }

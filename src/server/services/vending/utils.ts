@@ -33,5 +33,5 @@ export const createAndCacheNewVendingMachine = (user: IUser) => {
     })
   ).start();
 
-  cacheVendingMachine(machine, user);
+  return cacheVendingMachine(machine, user);
 };
