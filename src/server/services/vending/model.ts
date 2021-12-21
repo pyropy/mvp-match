@@ -1,18 +1,24 @@
 import { createModel } from "xstate/lib/model";
-import Product from "../../models/Product";
+import { IProduct } from "../../models/Product";
+import { IUser } from "../../models/User";
 
 // models
 export const vendingModel = createModel(
   {
     deposited: 0,
-    selected: undefined,
+    userBalance: 0,
+    selected: {
+      item: undefined,
+      quantity: 0,
+    },
     userId: undefined,
-    userActor: undefined,
+    userRef: undefined,
   },
   {
     events: {
+      userData: (data: IUser) => ({ data }),
       deposit: (value: number) => ({ value }),
-      selectItem: (item: typeof Product) => ({ item }),
+      selectItems: (item: IProduct, quantity: number) => ({ item, quantity }),
       payout: () => ({}),
     },
   }

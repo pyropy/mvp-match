@@ -9,6 +9,7 @@ import auth from "../../middleware/auth";
 import Payload from "../../types/Payload";
 import Request from "../../types/Request";
 import User, { IUser } from "../../models/User";
+import { createAndCacheNewVendingMachine } from "../../services/vending/utils";
 
 const router: Router = Router();
 
@@ -32,7 +33,7 @@ router.post(
   "/",
   [
     check("email", "Please include a valid email").isEmail(),
-    check("password", "Password is required").exists()
+    check("password", "Password is required").exists(),
   ],
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
@@ -50,9 +51,9 @@ router.post(
         return res.status(HttpStatusCodes.BAD_REQUEST).json({
           errors: [
             {
-              msg: "Invalid Credentials"
-            }
-          ]
+              msg: "Invalid Credentials",
+            },
+          ],
         });
       }
 
@@ -62,15 +63,17 @@ router.post(
         return res.status(HttpStatusCodes.BAD_REQUEST).json({
           errors: [
             {
-              msg: "Invalid Credentials"
-            }
-          ]
+              msg: "Invalid Credentials",
+            },
+          ],
         });
       }
 
       const payload: Payload = {
-        userId: user.id
+        userId: user.id,
       };
+
+      createAndCacheNewVendingMachine(user)
 
       jwt.sign(
         payload,

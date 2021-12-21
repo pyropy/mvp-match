@@ -1,15 +1,15 @@
-import { createMachine, actions, send } from "xstate";
+import { createMachine, actions, send, assign, spawn, interpret } from "xstate";
 import { vendingModel } from "./model";
 import {
-  afterVending,
+  onVendingFinish,
   depositActions,
   payoutActions,
-  restartSelectedItem,
+  restartSelectedItems,
   selectItemActions,
-  spawnUserActor,
 } from "./actions";
 import { vendingIsValid } from "./guards";
 import { VendingContext, VendingEvent } from "./types";
+import User from "../../models/User";
 const { log } = actions;
 
 const vendSelectedProduct = async (context, _event) => {
@@ -18,15 +18,28 @@ const vendSelectedProduct = async (context, _event) => {
   return true;
 };
 
+// const fetchUser = (ctx, event) => Promise.resolve({ balance: 100})
+
 const vendingMachine = createMachine<VendingContext, VendingEvent>(
   {
     id: "vending",
     initial: "idle",
     context: vendingModel.initialContext,
     states: {
-      idle: {
+      updateBalance: {
         // @ts-ignore
-        entry: spawnUserActor,
+        invoke: {
+          id: "fetch-user",
+          src: "fetchUser",
+          onDone: {
+            target: "idle",
+            actions: assign({
+              userBalance: (_, event) => event.data.balance,
+            }),
+          },
+        },
+      },
+      idle: {
         on: {
           // @ts-ignore
           selectItem: {
@@ -36,7 +49,7 @@ const vendingMachine = createMachine<VendingContext, VendingEvent>(
           },
           // @ts-ignore
           deposit: {
-            actions: ["fetchUser", depositActions],
+            actions: [depositActions],
           },
           // @ts-ignore
           payout: {
@@ -50,30 +63,28 @@ const vendingMachine = createMachine<VendingContext, VendingEvent>(
           id: "vending",
           src: vendSelectedProduct,
           onError: {
-            target: "idle",
+            target: "updateBalance",
             actions: [
-              restartSelectedItem,
+              restartSelectedItems,
               log("Error while tring to vend items"),
             ],
           },
           onDone: {
-            target: "idle",
-            actions: [afterVending, log("Vending finished")],
+            target: "updateBalance",
+            actions: [onVendingFinish, log("Vending finished")],
           },
         },
       },
     },
   },
   {
-    actions: {
-      fetchUser: (event, context) =>
-        send(
-          { type: "fetch" },
-          { to: (context: VendingContext) => context.userActor }
-        ),
-    },
     guards: {
       vendingIsValid,
+    },
+    services: {
+      fetchUser: async (ctx) => {
+        return User.findOne({ userId: ctx.userId });
+      },
     },
   }
 );

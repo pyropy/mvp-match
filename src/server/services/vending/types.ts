@@ -1,8 +1,10 @@
 import { IProduct } from "../../models/Product";
+import { IUser } from "../../models/User";
 
 // The events that the machine handles
 export type VendingEvent =
-  | { type: "selectItem"; item: IProduct }
+  | { type: "userData"; data: IUser }
+  | { type: "selectItem"; item: IProduct; quantity: number; }
   | { type: "deposit"; value: number }
   | { type: "payout" };
 
@@ -10,11 +12,19 @@ export type VendingEvent =
 export interface VendingContext {
   deposited: number;
   userId: string;
-  selected?: IProduct;
-  userActor: any;
+  selected: {
+    item?: IProduct
+    quantity?: number;
+  };
+  userBalance?: number;
+  userRef?: any;
 }
 
 export type VendingTypestate =
+  | {
+      value: "fetchBalance";
+      context: VendingContext;
+    }
   | {
       value: "idle";
       context: VendingContext;
