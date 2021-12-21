@@ -32,7 +32,7 @@ router.post(
         .json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const { email, password, vendor } = req.body;
     try {
       let user: IUser = await User.findOne({ email });
 
@@ -61,7 +61,8 @@ router.post(
       const userFields = {
         email,
         password: hashed,
-        avatar
+        avatar,
+        vendor
       };
 
       user = new User(userFields);

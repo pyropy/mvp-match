@@ -8,7 +8,7 @@ import Request from "../types/Request";
 
 export default function(req: Request, res: Response, next: NextFunction) {
   // Get token from header
-  const token = req.header("x-auth-token");
+  const token = req.header("Authorization");
 
   // Check if no token
   if (!token) {
@@ -16,9 +16,17 @@ export default function(req: Request, res: Response, next: NextFunction) {
       .status(HttpStatusCodes.UNAUTHORIZED)
       .json({ msg: "No token, authorization denied" });
   }
+
+  if (!token.startsWith('Bearer')) {
+    return res
+    .status(HttpStatusCodes.BAD_REQUEST)
+    .json({ msg: "Wrong token format, please include Bearer infront of token." });
+  }
+
   // Verify token
   try {
-    const payload: Payload | any = jwt.verify(token, config.get("jwtSecret"));
+    const tokenSignature = token.split(' ')[1]
+    const payload: Payload | any = jwt.verify(tokenSignature, config.get("jwtSecret"));
     req.userId = payload.userId;
     next();
   } catch (err) {

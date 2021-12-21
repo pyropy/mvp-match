@@ -16,17 +16,14 @@ const router: Router = Router();
 router.get("/deposit", async (req: Request, res: Response) => {
   try {
     const userId = "1";
-    const stateDefinition =
-      cacheService.get(userId) || vendingMachine.initialState;
-
+    const stateDefinition = cacheService.get(userId);
     const previousState: State<VendingContext, VendingEvent> =
       State.create(stateDefinition);
 
     const vendingMachineService =
       interpret(vendingMachine).start(previousState);
 
-
-    vendingMachineService.send("deposit", { value: 5 })
+    vendingMachineService.send("deposit", { value: 5 });
 
     const state = vendingMachineService.state;
 

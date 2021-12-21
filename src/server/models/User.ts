@@ -11,6 +11,7 @@ export interface IUser extends Document {
   password: string;
   avatar: string;
   vendor: boolean;
+  balance: number;
 }
 
 const userSchema: Schema = new Schema({
