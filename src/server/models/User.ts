@@ -40,7 +40,7 @@ const userSchema: Schema = new Schema({
     default: Date.now,
   },
   role: {
-    type: Boolean,
+    type: String,
     default: UserRole.Buyer,
   },
   balance: {

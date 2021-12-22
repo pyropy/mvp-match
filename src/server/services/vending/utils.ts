@@ -5,7 +5,7 @@ import vendingMachine from "../../services/vending";
 import { VendingContext, VendingEvent } from "../../services/vending/types";
 
 export const getCachedVendingMachine = (userId: string) => {
-  const stateDefinition = cacheService.get(userId);
+  const stateDefinition = cacheService.getSync(userId);
   const previousState: State<VendingContext, VendingEvent> =
     State.create(stateDefinition);
 
@@ -15,7 +15,7 @@ export const getCachedVendingMachine = (userId: string) => {
 export const cacheVendingMachine = (vendingMachineService, userId: string) => {
   const state = vendingMachineService.state;
 
-  cacheService.put(userId, state);
+  cacheService.putSync(userId, state);
 
   return state;
 };

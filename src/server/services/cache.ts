@@ -1,3 +1,5 @@
-import cache from 'memory-cache'
+import cache from 'persistent-cache'
 
-export default cache;
+const cacheService = cache();
+
+export default cacheService;
