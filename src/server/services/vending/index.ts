@@ -6,28 +6,13 @@ import {
   payoutActions,
   restartSelectedItem,
   selectItemActions,
+  vendSelectedProduct,
 } from "./actions";
 import { vendingIsValid } from "./guards";
 import { VendingContext, VendingEvent, VendingMachineStates } from "./types";
-import User, { IUser } from "../../models/User";
-import Product, { IProduct } from "../../models/Product";
+import User from "../../models/User";
+
 const { log } = actions;
-
-const vendSelectedProduct = async (context: VendingContext, _event) => {
-  const {
-    selected: { item, quantity },
-    userId,
-  } = context;
-
-  const user: IUser = await User.findById(userId);
-  const product: IProduct = await Product.findById(item.id);
-
-  user.balance -= quantity * product.cost;
-  product.amountAvailable -= quantity;
-
-  await user.save();
-  await product.save();
-};
 
 const vendingMachine = createMachine<VendingContext, VendingEvent>(
   {
@@ -36,7 +21,6 @@ const vendingMachine = createMachine<VendingContext, VendingEvent>(
     context: vendingModel.initialContext,
     states: {
       [VendingMachineStates.UpdateBalance]: {
-        // @ts-ignore
         invoke: {
           id: "update-balance",
           src: "fetchUser",
@@ -50,35 +34,31 @@ const vendingMachine = createMachine<VendingContext, VendingEvent>(
       },
       [VendingMachineStates.Idle]: {
         on: {
-          // @ts-ignore
           selectItem: {
             target: VendingMachineStates.Vending,
-            actions: selectItemActions,
+            actions: 'selectItemActions',
             cond: vendingIsValid,
           },
-          // @ts-ignore
           deposit: {
-            actions: depositActions,
+            actions: 'depositActions',
           },
-          // @ts-ignore
           payout: {
-            actions: payoutActions,
+            actions: 'payoutActions',
           },
         },
       },
       [VendingMachineStates.Vending]: {
-        // @ts-ignore
         invoke: {
           id: "vending",
           src: vendSelectedProduct,
           onDone: {
             target: VendingMachineStates.UpdateBalance,
-            actions: [onVendingFinish, log("Vending finished")],
+            actions: ["onVendingFinish", log("Vending selected items")],
           },
           onError: {
             target: VendingMachineStates.UpdateBalance,
             actions: [
-              restartSelectedItem,
+              "restartSelectedItem",
               log("Error while tring to vend items"),
             ],
           },
@@ -87,6 +67,13 @@ const vendingMachine = createMachine<VendingContext, VendingEvent>(
     },
   },
   {
+    actions: {
+      depositActions,
+      payoutActions,
+      onVendingFinish,
+      restartSelectedItem,
+      selectItemActions,
+    },
     guards: {
       vendingIsValid,
     },

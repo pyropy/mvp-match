@@ -1,13 +1,14 @@
-import { actions } from "xstate";
-import { vendingModel } from "./model";
+import { actions, assign } from "xstate";
 import { VendingContext, VendingEvent } from "./types";
+import User, { IUser } from "../../models/User";
+import Product, { IProduct } from "../../models/Product";
 
 const { choose, log } = actions;
 
 /*
  * Sets new selected item and quantity
  */
-const selectItem = vendingModel.assign({
+const selectItem = assign<VendingContext, VendingEvent>({
   // @ts-ignore
   selected: (_ctx: VendingContext, event: VendingEvent) =>
     event.type === "selectItem"
@@ -42,7 +43,7 @@ const acceptedCoins = [5, 10, 20, 50, 100];
 /*
  * Computes new deposited amount.
  */
-const deposit = vendingModel.assign({
+const deposit = assign<VendingContext, VendingEvent>({
   deposited: (ctx, event) =>
     event.type === "deposit" ? ctx.deposited + event.value : ctx.deposited,
 });
@@ -53,7 +54,7 @@ const deposit = vendingModel.assign({
  * user balance is bigger then current deposited amount + new deposit
  * and new deposit amount is included in accepted coins array.
  */
-export const depositActions = choose([
+export const depositActions = choose<VendingContext, VendingEvent>([
   {
     // @ts-ignore
     cond: (ctx: VendingContext, event: VendingEvent) =>
@@ -71,7 +72,7 @@ export const depositActions = choose([
   },
 ]);
 
-const payout = vendingModel.assign({
+const payout = assign<VendingContext, VendingEvent>({
   deposited: 0,
 });
 
@@ -79,7 +80,7 @@ const payout = vendingModel.assign({
  * Conditional payout action. Payouts are allowed if deposited amount
  * is included in allowed coins array.
  */
-export const payoutActions = choose([
+export const payoutActions = choose<VendingContext, VendingEvent>([
   {
     // @ts-ignore
     cond: (ctx: VendingContext, event: VendingEvent) =>
@@ -95,7 +96,7 @@ export const payoutActions = choose([
 /*
  * Restarts selected item to undefined and quantity to 0.
  */
-export const restartSelectedItem = vendingModel.assign({
+export const restartSelectedItem = assign<VendingContext, VendingEvent>({
   selected: (_ctx, _event: any) => ({ item: undefined, quantity: 0 }),
 });
 
@@ -108,9 +109,9 @@ const calculateChange = (ctx: VendingContext): number =>
 /*
  * On vending resets selected item and sets deposited to change amount.
  */
-export const onVendingFinish = vendingModel.assign({
+export const onVendingFinish = assign<VendingContext, VendingEvent>({
   deposited: (ctx: VendingContext, _event: any) => calculateChange(ctx),
-  selected: (_ctx: VendingContext, _event: any) => ({
+  selected: () => ({
     item: undefined,
     quantity: 0,
   }),
@@ -121,3 +122,22 @@ export const onVendingFinish = vendingModel.assign({
     change: calculateChange(ctx),
   }),
 });
+
+export const vendSelectedProduct = async (
+  context: VendingContext,
+  _event: any
+) => {
+  const {
+    selected: { item, quantity },
+    userId,
+  } = context;
+
+  const user: IUser = await User.findById(userId);
+  const product: IProduct = await Product.findById(item.id);
+
+  user.balance -= quantity * product.cost;
+  product.amountAvailable -= quantity;
+
+  await user.save();
+  await product.save();
+};

@@ -12,7 +12,7 @@ export const getCachedVendingMachine = (userId: string) => {
   return interpret(vendingMachine).start(previousState);
 };
 
-export const cacheVendingMachine = (vendingMachineService, userId: string) => {
+export const cacheVendingMachine = (vendingMachineService: any, userId: string) => {
   const state = vendingMachineService.state;
 
   cacheService.putSync(userId, state);

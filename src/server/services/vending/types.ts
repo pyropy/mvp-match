@@ -1,3 +1,4 @@
+import { ActionObject, EventObject, StateMachine } from "xstate";
 import { IProduct } from "../../models/Product";
 
 export enum VendingEvents {
