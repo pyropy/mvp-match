@@ -9,6 +9,7 @@ import jwt from "jsonwebtoken";
 import Payload from "../../types/Payload";
 import Request from "../../types/Request";
 import User, { IUser, UserRole } from "../../models/User";
+import { createAndCacheNewVendingMachine } from "../../services/vending/utils";
 
 const router: Router = Router();
 
@@ -73,6 +74,8 @@ router.post(
         userId: user.id,
         userRole: user.role
       };
+
+      createAndCacheNewVendingMachine(user);
 
       jwt.sign(
         payload,
