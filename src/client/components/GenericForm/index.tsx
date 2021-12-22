@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { InputField } from "../InputField";
+import { InputField } from "./InputField";
 
 type UserFormData = {
   email?: string;

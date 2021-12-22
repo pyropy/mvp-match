@@ -8,6 +8,7 @@
         "sourceMap": true,
         "outDir": "./dist/",
         "baseUrl": ".",
+        "keyofStringsOnly": true,
         "allowSyntheticDefaultImports": true,
         "lib": [
             "es2017"
@@ -22,5 +23,7 @@
     "include": [
         "src/server/**/*"
     ],
-    "exclude": ["node_modules"]
+    "exclude": [
+        "node_modules"
+    ]
 }

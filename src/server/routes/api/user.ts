@@ -8,7 +8,7 @@ import jwt from "jsonwebtoken";
 
 import Payload from "../../types/Payload";
 import Request from "../../types/Request";
-import User, { IUser } from "../../models/User";
+import User, { IUser, UserRole } from "../../models/User";
 
 const router: Router = Router();
 
@@ -22,7 +22,7 @@ router.post(
     check(
       "password",
       "Please enter a password with 6 or more characters"
-    ).isLength({ min: 6 })
+    ).isLength({ min: 6 }),
   ],
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
@@ -40,16 +40,16 @@ router.post(
         return res.status(HttpStatusCodes.BAD_REQUEST).json({
           errors: [
             {
-              msg: "User already exists"
-            }
-          ]
+              msg: "User already exists",
+            },
+          ],
         });
       }
 
       const options: gravatar.Options = {
         s: "200",
         r: "pg",
-        d: "mm"
+        d: "mm",
       };
 
       const avatar = gravatar.url(email, options);
@@ -62,7 +62,7 @@ router.post(
         email,
         password: hashed,
         avatar,
-        vendor
+        role: vendor ? UserRole.Vendor : UserRole.Buyer,
       };
 
       user = new User(userFields);
@@ -70,7 +70,8 @@ router.post(
       await user.save();
 
       const payload: Payload = {
-        userId: user.id
+        userId: user.id,
+        userRole: user.role
       };
 
       jwt.sign(

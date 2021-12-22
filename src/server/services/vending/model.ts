@@ -11,6 +11,12 @@ export const vendingModel = createModel(
       item: undefined,
       quantity: 0,
     },
+    tray: {
+      item: undefined,
+      quantity: 0,
+      total: 0,
+      change: 0,
+    },
     userId: undefined,
     userRef: undefined,
   },

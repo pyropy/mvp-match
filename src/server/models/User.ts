@@ -1,11 +1,16 @@
 import { Document, Model, model, Schema } from "mongoose";
 
+export enum UserRole {
+  Vendor = "vendor",
+  Buyer = "buyer",
+}
+
 /**
  * Interface to model the User Schema for TypeScript.
  * @param email:string
  * @param password:string
  * @param avatar:string
- * @param vendor:boolean
+ * @param role:string
  * @param balance:number
  */
 export interface IUser extends Document {
@@ -13,7 +18,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   avatar: string;
-  vendor: boolean;
+  role: string;
   balance: number;
 }
 
@@ -34,9 +39,9 @@ const userSchema: Schema = new Schema({
     type: Date,
     default: Date.now,
   },
-  vendor: {
+  role: {
     type: Boolean,
-    default: false,
+    default: UserRole.Buyer,
   },
   balance: {
     type: Number,

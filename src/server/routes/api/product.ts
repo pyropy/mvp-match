@@ -5,7 +5,7 @@ import auth from "../../middleware/auth";
 import Request from "../../types/Request";
 import Product from "../../models/Product";
 import { check, validationResult } from "express-validator/check";
-import User, { IUser } from "../../models/User";
+import { UserRole } from "../../models/User";
 
 const router: Router = Router();
 
@@ -16,8 +16,14 @@ router.post(
   "/add",
   [
     check("productName", "Product name is required.").isAlphanumeric(),
-    check("cost", "Invalid cost, please provide positive decimal number.").isFloat({ gt: 0 }),
-    check("amountAvailable", "Amount available must be positive number or zero.").isInt({ gt: -1 }),
+    check(
+      "cost",
+      "Invalid cost, please provide positive decimal number."
+    ).isFloat({ gt: 0 }),
+    check(
+      "amountAvailable",
+      "Amount available must be positive number or zero."
+    ).isInt({ gt: -1 }),
   ],
   auth,
   async (req: Request, res: Response) => {
@@ -29,9 +35,7 @@ router.post(
     }
 
     try {
-      const user: IUser = await User.findById(req.userId).select("-password");
-
-      if (!user.vendor) {
+      if (req.userRole !== UserRole.Vendor) {
         return res
           .status(HttpStatusCodes.BAD_REQUEST)
           .send("Only vendors are allowed to add products");
@@ -43,7 +47,7 @@ router.post(
         productName,
         cost,
         amountAvailable,
-        sellerId: user.id,
+        sellerId: req.userId,
       };
 
       const product = new Product(productFields);

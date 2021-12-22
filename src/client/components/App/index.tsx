@@ -9,7 +9,7 @@ import {
 } from "react-router-dom";
 
 import AuthPage from "../AuthPage";
-import Home from "../Home";
+import Home from "../HomePage";
 
 const App = (props: AppProps) => {
   return (

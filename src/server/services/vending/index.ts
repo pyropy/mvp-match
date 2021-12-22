@@ -8,7 +8,7 @@ import {
   selectItemActions,
 } from "./actions";
 import { vendingIsValid } from "./guards";
-import { VendingContext, VendingEvent } from "./types";
+import { VendingContext, VendingEvent, VendingMachineStates } from "./types";
 import User, { IUser } from "../../models/User";
 import Product, { IProduct } from "../../models/Product";
 const { log } = actions;
@@ -35,30 +35,30 @@ const vendingMachine = createMachine<VendingContext, VendingEvent>(
     initial: "idle",
     context: vendingModel.initialContext,
     states: {
-      updateBalance: {
+      [VendingMachineStates.UpdateBalance]: {
         // @ts-ignore
         invoke: {
-          id: "fetch-user",
+          id: "update-balance",
           src: "fetchUser",
           onDone: {
-            target: "idle",
+            target: VendingMachineStates.Idle,
             actions: assign({
               userBalance: (_, event) => event.data.balance,
             }),
           },
         },
       },
-      idle: {
+      [VendingMachineStates.Idle]: {
         on: {
           // @ts-ignore
           selectItem: {
-            target: "vending",
+            target: VendingMachineStates.Vending,
             actions: selectItemActions,
             cond: vendingIsValid,
           },
           // @ts-ignore
           deposit: {
-            actions: [depositActions],
+            actions: depositActions,
           },
           // @ts-ignore
           payout: {
@@ -66,17 +66,17 @@ const vendingMachine = createMachine<VendingContext, VendingEvent>(
           },
         },
       },
-      vending: {
+      [VendingMachineStates.Vending]: {
         // @ts-ignore
         invoke: {
           id: "vending",
           src: vendSelectedProduct,
           onDone: {
-            target: "updateBalance",
+            target: VendingMachineStates.UpdateBalance,
             actions: [onVendingFinish, log("Vending finished")],
           },
           onError: {
-            target: "updateBalance",
+            target: VendingMachineStates.UpdateBalance,
             actions: [
               restartSelectedItem,
               log("Error while tring to vend items"),

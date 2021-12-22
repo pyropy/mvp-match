@@ -1,35 +1,54 @@
 import { IProduct } from "../../models/Product";
-import { IUser } from "../../models/User";
+
+export enum VendingEvents {
+  SelectItem = "selectItem",
+  Deposit = "deposit",
+  Payout = "payout",
+}
 
 // The events that the machine handles
 export type VendingEvent =
-  | { type: "userData"; data: IUser }
-  | { type: "selectItem"; item: IProduct; quantity: number; }
-  | { type: "deposit"; value: number }
-  | { type: "payout" };
+  | { type: VendingEvents.SelectItem; item: IProduct; quantity: number }
+  | { type: VendingEvents.Deposit; value: number }
+  | { type: VendingEvents.Payout };
+
+export enum VendingMachineStates {
+  UpdateBalance = "updateBalance",
+  Idle = "idle",
+  Vending = "vending",
+}
+
+type SelectedProduct = {
+  item?: IProduct;
+  quantity?: number;
+};
+
+// Tray holds info about last purchage
+type Tray = SelectedProduct & {
+  total?: number;
+  change: number;
+};
 
 // The context (extended state) of the machine
 export interface VendingContext {
   deposited: number;
   userId: string;
-  selected: {
-    item?: IProduct
-    quantity?: number;
-  };
+  selected: SelectedProduct;
+  tray: Tray;
   userBalance?: number;
   userRef?: any;
 }
 
 export type VendingTypestate =
   | {
-      value: "updateBalance";
+      value: VendingMachineStates.UpdateBalance;
       context: VendingContext;
     }
   | {
-      value: "idle";
+      value: VendingMachineStates.Idle;
       context: VendingContext;
     }
   | {
-      value: "vending";
+      value: VendingMachineStates.Vending;
       context: VendingContext;
     };

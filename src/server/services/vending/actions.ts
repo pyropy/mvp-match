@@ -20,7 +20,7 @@ const selectItem = vendingModel.assign({
  * It is possible to if amount availalble and quantity is bigger then zero
  * and selected quantity is not bigger then amount availalble.
  */
-export const selectItemActions = choose([
+export const selectItemActions = choose<VendingContext, VendingEvent>([
   {
     // @ts-ignore
     cond: (_ctx, event: VendingEvent) =>
@@ -67,7 +67,7 @@ export const depositActions = choose([
     actions: [deposit, log("Depositing")],
   },
   {
-    actions: [log("Given value not acceptable")],
+    actions: [log("Deposit not possible.")],
   },
 ]);
 
@@ -88,7 +88,7 @@ export const payoutActions = choose([
     actions: [payout, log("Paying out deposit.")],
   },
   {
-    actions: [log("Not possible to payout given value.")],
+    actions: [log("Payout not possible.")],
   },
 ]);
 
@@ -99,14 +99,25 @@ export const restartSelectedItem = vendingModel.assign({
   selected: (_ctx, _event: any) => ({ item: undefined, quantity: 0 }),
 });
 
+const calculateTotal = (ctx: VendingContext): number =>
+  ctx.selected.item?.cost * ctx.selected.quantity;
+
+const calculateChange = (ctx: VendingContext): number =>
+  ctx.deposited - calculateTotal(ctx);
+
 /*
  * On vending resets selected item and sets deposited to change amount.
  */
 export const onVendingFinish = vendingModel.assign({
-  deposited: (ctx: VendingContext, _event: any) =>
-    ctx.deposited - ctx.selected.item.cost * ctx.selected.quantity,
+  deposited: (ctx: VendingContext, _event: any) => calculateChange(ctx),
   selected: (_ctx: VendingContext, _event: any) => ({
     item: undefined,
     quantity: 0,
+  }),
+  tray: (ctx: VendingContext, _event: any) => ({
+    item: ctx.selected.item,
+    quantity: ctx.selected.quantity,
+    total: calculateTotal(ctx),
+    change: calculateChange(ctx),
   }),
 });

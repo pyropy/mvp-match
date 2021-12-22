@@ -4,7 +4,8 @@ import HttpStatusCodes from "http-status-codes";
 
 import auth from "../../middleware/auth";
 import Product, { IProduct } from "../../models/Product";
-import User, { IUser } from "../../models/User";
+import { UserRole } from "../../models/User";
+import { VendingEvents } from "../../services/vending/types";
 import {
   cacheVendingMachine,
   getCachedVendingMachine,
@@ -30,10 +31,9 @@ router.post(
     }
 
     const { amount } = req.body;
-    try {
-      const user: IUser = await User.findById(req.userId);
 
-      if (user.vendor) {
+    try {
+      if (req.userRole === UserRole.Vendor) {
         return res.status(HttpStatusCodes.BAD_REQUEST).json({
           errors: [
             {
@@ -43,11 +43,14 @@ router.post(
         });
       }
 
-      const vendingMachineService = getCachedVendingMachine(user);
+      const vendingMachineService = getCachedVendingMachine(req.userId);
 
-      vendingMachineService.send("deposit", { value: amount });
+      vendingMachineService.send(VendingEvents.Deposit, { value: amount });
 
-      const cachedState = cacheVendingMachine(vendingMachineService, user);
+      const cachedState = cacheVendingMachine(
+        vendingMachineService,
+        req.userId
+      );
 
       res.json(cachedState.context);
     } catch (err) {
@@ -62,9 +65,7 @@ router.post(
 // @access  Private
 router.post("/reset", auth, async (req: Request, res: Response) => {
   try {
-    const user: IUser = await User.findById(req.userId);
-
-    if (user.vendor) {
+    if (req.userRole === UserRole.Vendor) {
       return res.status(HttpStatusCodes.BAD_REQUEST).json({
         errors: [
           {
@@ -74,11 +75,11 @@ router.post("/reset", auth, async (req: Request, res: Response) => {
       });
     }
 
-    const vendingMachineService = getCachedVendingMachine(user);
+    const vendingMachineService = getCachedVendingMachine(req.userId);
 
-    vendingMachineService.send("payout");
+    vendingMachineService.send(VendingEvents.Payout);
 
-    const cachedState = cacheVendingMachine(vendingMachineService, user);
+    const cachedState = cacheVendingMachine(vendingMachineService, req.userId);
 
     res.json(cachedState.context);
   } catch (err) {
@@ -105,10 +106,7 @@ router.post(
     const { productId, amount } = req.body;
 
     try {
-      const user: IUser = await User.findById(req.userId);
-      const product: IProduct = await Product.findById(productId);
-
-      if (user.vendor) {
+      if (req.userRole === UserRole.Vendor) {
         return res.status(HttpStatusCodes.BAD_REQUEST).json({
           errors: [
             {
@@ -117,6 +115,7 @@ router.post(
           ],
         });
       }
+      const product: IProduct = await Product.findById(productId);
 
       if (!product) {
         return res.status(HttpStatusCodes.BAD_REQUEST).json({
@@ -128,16 +127,19 @@ router.post(
         });
       }
 
-      const vendingMachineService = getCachedVendingMachine(user);
+      const vendingMachineService = getCachedVendingMachine(req.userId);
 
-      vendingMachineService.send("selectItem", {
+      vendingMachineService.send(VendingEvents.SelectItem, {
         item: product,
         quantity: amount,
       });
 
-      vendingMachineService.onTransition((t) => {
-        if (t.value === "idle") {
-          const cachedState = cacheVendingMachine(vendingMachineService, user);
+      vendingMachineService.onTransition((transition) => {
+        if (transition.value === "idle") {
+          const cachedState = cacheVendingMachine(
+            vendingMachineService,
+            req.userId
+          );
           res.json(cachedState.context);
         }
       });
@@ -153,9 +155,7 @@ router.post(
 // @access  Private
 router.get("/state", auth, async (req: Request, res: Response) => {
   try {
-    const user: IUser = await User.findById(req.userId);
-
-    if (user.vendor) {
+    if (req.userRole === UserRole.Vendor) {
       return res.status(HttpStatusCodes.BAD_REQUEST).json({
         errors: [
           {
@@ -165,7 +165,7 @@ router.get("/state", auth, async (req: Request, res: Response) => {
       });
     }
 
-    const vendingMachineService = getCachedVendingMachine(user);
+    const vendingMachineService = getCachedVendingMachine(req.userId);
 
     res.json(vendingMachineService.state);
   } catch (err) {
