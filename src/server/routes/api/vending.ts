@@ -19,9 +19,7 @@ const router: Router = Router();
 // @access  Private
 router.post(
   "/deposit",
-  [
-    check("amount", "Please provide positive integer amount.").isInt({ gt: 0 }),
-  ],
+  [check("amount", "Please provide positive integer amount.").isInt({ gt: 0 })],
   auth,
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
@@ -60,10 +58,9 @@ router.post(
 );
 
 // @route   POST api/vending/reset
-// @desc    Add deposit to vending machine
+// @desc    Reset deposit to vending machine
 // @access  Private
 router.post("/reset", auth, async (req: Request, res: Response) => {
-
   try {
     const user: IUser = await User.findById(req.userId);
 
@@ -151,10 +148,8 @@ router.post(
   }
 );
 
-
-
 // @route   GET api/vending/state
-// @desc    Add deposit to vending machine
+// @desc    Get current deposit state
 // @access  Private
 router.get("/state", auth, async (req: Request, res: Response) => {
   try {
