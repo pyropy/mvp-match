@@ -28,6 +28,7 @@ export default function(req: Request, res: Response, next: NextFunction) {
     const tokenSignature = token.split(' ')[1]
     const payload: Payload | any = jwt.verify(tokenSignature, config.get("jwtSecret"));
     req.userId = payload.userId;
+    req.userRole = payload.userRole;
     next();
   } catch (err) {
     res

@@ -73,6 +73,7 @@ router.post(
         userId: user.id,
         userRole: user.role,
       };
+
       createAndCacheNewVendingMachine(user);
 
       jwt.sign(
