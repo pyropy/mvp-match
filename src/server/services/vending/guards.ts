@@ -1,7 +1,16 @@
 import { VendingContext, VendingEvent } from "./types";
 
-export const vendingIsValid = (ctx: VendingContext, event: VendingEvent): boolean =>
-  event.type === 'selectItem' &&
+/*
+ * Allow vending only if user has deposited money,
+ * has specified selected product and quantity,
+ * there is enough of selected product for selected quantity,
+ * and user has deposited enough money to buy selected item quantity.
+ */
+export const vendingIsValid = (
+  ctx: VendingContext,
+  event: VendingEvent
+): boolean =>
+  event.type === "selectItem" &&
   ctx.deposited > 0 &&
   event.item &&
   event.item.amountAvailable &&
