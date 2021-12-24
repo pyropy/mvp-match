@@ -72,26 +72,10 @@ export const depositActions = choose<VendingContext, VendingEvent>([
   },
 ]);
 
-const payout = assign<VendingContext, VendingEvent>({
+export const payout = assign<VendingContext, VendingEvent>({
   deposited: 0,
 });
 
-/*
- * Conditional payout action. Payouts are allowed if deposited amount
- * is included in allowed coins array.
- */
-export const payoutActions = choose<VendingContext, VendingEvent>([
-  {
-    // @ts-ignore
-    cond: (ctx: VendingContext, event: VendingEvent) =>
-      event.type === "payout" && acceptedCoins.includes(ctx.deposited),
-    // @ts-ignore
-    actions: [payout, log("Paying out deposit.")],
-  },
-  {
-    actions: [log("Payout not possible.")],
-  },
-]);
 
 /*
  * Restarts selected item to undefined and quantity to 0.

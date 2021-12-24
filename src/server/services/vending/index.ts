@@ -3,7 +3,7 @@ import { vendingModel } from "./model";
 import {
   onVendingFinish,
   depositActions,
-  payoutActions,
+  payout,
   restartSelectedItem,
   selectItemActions,
   vendSelectedProduct,
@@ -36,14 +36,14 @@ const vendingMachine = createMachine<VendingContext, VendingEvent>(
         on: {
           selectItem: {
             target: VendingMachineStates.Vending,
-            actions: 'selectItemActions',
+            actions: "selectItemActions",
             cond: vendingIsValid,
           },
           deposit: {
-            actions: 'depositActions',
+            actions: "depositActions",
           },
           payout: {
-            actions: 'payoutActions',
+            actions: "payout",
           },
         },
       },
@@ -69,7 +69,7 @@ const vendingMachine = createMachine<VendingContext, VendingEvent>(
   {
     actions: {
       depositActions,
-      payoutActions,
+      payout,
       onVendingFinish,
       restartSelectedItem,
       selectItemActions,
